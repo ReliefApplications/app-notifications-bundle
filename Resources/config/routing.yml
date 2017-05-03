@@ -1,0 +1,4 @@
+default:
+    type: rest
+    resource: "ReliefappsNotificationBundle:Default"
+

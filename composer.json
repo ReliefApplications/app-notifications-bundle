@@ -1,0 +1,26 @@
+{
+  "name" : "reliefapps/notification-bundle",
+  "description" : "A Bundle providing services to send push notifications",
+  "type" : "symfony-bundle",
+  "authors" : [{
+    "name" : "Relief Apps",
+    "email" : "contact@reliefapplications.org"
+  }],
+  "keywords" : ["notifications bundle"],
+  "license" : ["MIT"],
+  "require" : {
+    "php": ">=5.5.9",
+    "symfony/symfony": "3.2.*",
+    "symfony/monolog-bundle": "^3.0.2",
+  },
+  "autoload" : {
+    "psr-0" : {
+      "Reliefapps\\NotificationBundle" : ""
+    }
+  },
+  "target-dir" :  "Reliefapps/NotificationBundle",
+  "repositories" : [{}],
+  "branch-alias" : {
+    "dev-master" : "v0.0.1-dev"
+  }
+}

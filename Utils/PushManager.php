@@ -108,43 +108,48 @@ class PushManager
     {
         $logger = $this->container->get('logger');
         //IOS HTTP/2 APNs Protocol
-        if(!defined('CURL_HTTP_VERSION_2_0')){
+        if (!(curl_version()["features"] & CURL_VERSION_HTTP2 !== 0)) {
+            $logger->warning('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
             return false;
         }
         //$headers = array("authorization: ", "apns-id: ", "apns-expiration: ", "apns-priority: ", "apns-topic: ", "apns-collapse-id: ")
-        $headers = array();
+        $headers = array("apns-topic: org.reliefapps.emalsys");
 
         $fields = array("aps" => array(
                             "alert" => $title,
                             "sound" => "default",
                         ));
+        $fields_json = json_encode($fields);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
         curl_setopt($ch, CURLOPT_SSLCERT, $this->iosCertificate);
         curl_setopt($ch, CURLOPT_SSLCERTPASSWD, $this->iosPassphrase);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_NOBODY, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::IOS_HTTP_TIMEOUT);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+        curl_setopt($ch, CURLOPT_POST, count($fields_json));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_json);
 
         foreach($deviceTokens as $token){
-            $url = "https://api.development.push.apple.com/3/device/$token";
+            $url = "https://api.push.apple.com/3/device/$token";
             curl_setopt( $ch, CURLOPT_URL, $url );
 
             $response = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
             if($httpcode == 0){
-                $logger->error('APNS server return an error : ' . $response);
+                $logger->error('APNs server return an error : ' . $response);
                 if( preg_match('/HTTP\/2/', $response) ){
                     $logger->warning('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
                 }
             }
             elseif($httpcode != 200){
-                $logger->error('APNS server returned an error : (' . $httpcode . ') ' . $response);
+                $logger->error('APNs server returned an error : (' . $httpcode . ') ' . $response);
             }else{
-                $logger->debug('APNS server returned : ' . $response);
+                $logger->debug('APNs server returned : ' . $response);
             }
         }
 
@@ -171,7 +176,7 @@ class PushManager
     public function sendPushIOSLegacy($deviceTokens, $title)
     {
         $logger = $this->container->get('logger');
-        // IOS
+
         if (file_exists($this->iosCertificate))  // Si le certificat est présent = environnement de prod
         {
             $logger->info("iOS certificate detected");

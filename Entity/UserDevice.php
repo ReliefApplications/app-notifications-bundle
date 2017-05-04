@@ -28,6 +28,13 @@ class UserDevice
     /**
      * @var string
      *
+     * @ORM\Column(name="uuid", type="string", length=255)
+     */
+    private $uuid;
+
+    /**
+     * @var string
+     *
      * @ORM\Column(name="token", type="string", length=255)
      */
     private $token;
@@ -167,5 +174,29 @@ class UserDevice
     public function getAcceptPush()
     {
         return $this->acceptPush;
+    }
+
+    /**
+     * Set uuid
+     *
+     * @param string $uuid
+     *
+     * @return UserDevice
+     */
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
+
+        return $this;
+    }
+
+    /**
+     * Get uuid
+     *
+     * @return string
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
     }
 }

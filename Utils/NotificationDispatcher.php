@@ -25,7 +25,7 @@ class NotificationDispatcher{
 
         foreach($userDevices as $userDevice){
             if($userDevice->getAcceptPush()){
-                array_push($allowedUserDevices->getToken(), $userDevice):
+                array_push($allowedUserDevices->getToken(), $userDevice);
             }
         }
 

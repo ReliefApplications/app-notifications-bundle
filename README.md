@@ -46,7 +46,7 @@ class AppKernel extends Kernel
 Step 3 : Configure the Bundle
 -----------------------------
 
-In your project, add at the end of the file app/config/config.yml the following configuration :
+In your project, add at the end of the file `app/config/config.yml` the following configuration :
 ```yml
 reliefapps_notification:
     android:
@@ -66,5 +66,9 @@ Once you have followed this tutorial, check that cURL supports HTTP/2 by running
 curl --http2 -I https://nghttp2.org/
 ```
 
-If it works, you can remove the ``` protocol: legacy ``` line in your app/config/config.yml file.
+If it works, you can remove the line :
+```yml
+            protocol: legacy
+```
+in your `app/config/config.yml` file.
 

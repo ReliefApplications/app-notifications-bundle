@@ -2,7 +2,6 @@
 
   namespace Reliefapps\NotificationBundle\Entity;
 
-  use RwNotificationsBundle\Entity\User;
   use Doctrine\ORM\Mapping as ORM;
 
 /**

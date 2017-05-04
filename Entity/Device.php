@@ -5,12 +5,12 @@ namespace Reliefapps\NotificationBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * UserDevice
+ * Device
  *
- * @ORM\Table(name="user_device")
- * @ORM\Entity(repositoryClass="Reliefapps\NotificationBundle\Repository\UserDeviceRepository")
+ * @ORM\Table(name="device")
+ * @ORM\Entity(repositoryClass="Reliefapps\NotificationBundle\Repository\DeviceRepository")
  */
-class UserDevice
+class Device
 {
     const TYPE_ANDROID = 0;
     const TYPE_IOS     = 1;

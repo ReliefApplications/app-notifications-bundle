@@ -6,6 +6,7 @@ use Reliefapps\NotificationBundle\Utils\PushManager;
 
 //Entities
 use Reliefapps\NotificationBundle\Entity\Notification;
+use Reliefapps\NotificationBundle\Entity\UserDevice;
 
 class NotificationDispatcher{
 
@@ -17,28 +18,22 @@ class NotificationDispatcher{
         $this->pushManager = $pushManager;
     }
 
-    //send notification to all the users found in the database
-    public function sendNotificationtoUser($users, $options)
+    //sendPush to all the allowed users found in the database
+    public function sendNotificationtoUser($userDevices, $options)
     {
-        $deviceTokens = array();
-        $returnMessage = "";
+        $allowedUserDevices = array();
+
+        foreach($userDevices as $userDevice){
+            if($userDevice->getAcceptPush()){
+                array_push($allowedUserDevices->getToken(), $userDevice):
+            }
+        }
 
         $title  = array_key_exists("title",  $options) ? $options["title"]  : "";
         $body   = array_key_exists("body",   $options) ? $options["body"]   : "";
         $type   = array_key_exists("type",   $options) ? $options["type"]   : Notification::NONE;
 
-        foreach($users as $user)
-        {
-            try{
-                $idPhone = $user->getIdPhone();
-                array_push($deviceTokens,$user->getIdPhone());
-            }catch(Exception $e){
-                $returnMessage = "ERROR : the user ".$user." does not have a getIdPhone method - ".$e;
-            }
-        }
-
-        $this->pushManager->sendPush($deviceTokens, $title);
-        return $returnMessage;
+        $this->pushManager->sendPush($allowedUserDevices, $title);
     }
 }
 

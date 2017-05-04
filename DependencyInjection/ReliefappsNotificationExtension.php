@@ -28,5 +28,6 @@ class ReliefappsNotificationExtension extends Extension
         $container->setParameter('reliefapps_notification.android.server_key', $config['android']['server_key']);
         $container->setParameter('reliefapps_notification.ios.push_certificate', $config['ios']['push_certificate']);
         $container->setParameter('reliefapps_notification.ios.push_passphrase', $config['ios']['push_passphrase']);
+        $container->setParameter('reliefapps_notification.ios.protocol', $config['ios']['protocol']);
     }
 }

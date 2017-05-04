@@ -7,14 +7,15 @@ use Monolog\Logger;
 class PushManager
 {
     // iOS notifications are send by series of this length. Set to -1 to disable.
-    const IOS_NOTIFICATION_CHAIN_LENGTH = 10;
+    const IOS_NOTIFICATION_CHAIN_LENGTH = 1;
 
     const IOS_HTTP_TIMEOUT = 1000;
 
-    public function __construct($ios_push_certificate, $ios_push_passphrase, $android_server_key, $container)
+    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol, $android_server_key, $container)
     {
         $this->iosCertificate = $ios_push_certificate;
         $this->iosPassphrase  = $ios_push_passphrase;
+        $this->iosProtocol = $ios_protocol;
         $this->android_server_key = $android_server_key;
         $this->container = $container;
     }
@@ -48,7 +49,11 @@ class PushManager
         }
 
         $this->sendPushAndroid($android_tokens, $title);
-        $this->sendPushIOSLegacy($ios_tokens, $title);
+        if( $this->iosProtocol == 'legacy'){
+            $this->sendPushIOSLegacy($ios_tokens, $title);
+        }else{
+            $this->sendPushIOSHttp2($ios_tokens, $title);
+        }
 
     }
 
@@ -99,11 +104,12 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param title           : title of the notification
      */
-    public function sendPushIOS($deviceTokens, $title)
+    public function sendPushIOSHttp2($deviceTokens, $title)
     {
         $logger = $this->container->get('logger');
         //IOS HTTP/2 APNs Protocol
         if(!defined('CURL_HTTP_VERSION_2_0')){
+            return false;
         }
         //$headers = array("authorization: ", "apns-id: ", "apns-expiration: ", "apns-priority: ", "apns-topic: ", "apns-collapse-id: ")
         $headers = array();
@@ -122,15 +128,23 @@ class PushManager
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
 
-        foreach($ios_tokens as $token){
+        foreach($deviceTokens as $token){
             $url = "https://api.development.push.apple.com/3/device/$token";
             curl_setopt( $ch, CURLOPT_URL, $url );
 
-            $response = json_decode( curl_exec($ch) );
+            $response = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-            if($httpcode != 200){
-                $logger->error('APNS server returned error : (' . $httpcode . ') ' . $response["reason"]);
+            if($httpcode == 0){
+                $logger->error('APNS server return an error : ' . $response);
+                if( preg_match('/HTTP\/2/', $response) ){
+                    $logger->warning('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
+                }
+            }
+            elseif($httpcode != 200){
+                $logger->error('APNS server returned an error : (' . $httpcode . ') ' . $response);
+            }else{
+                $logger->debug('APNS server returned : ' . $response);
             }
         }
 

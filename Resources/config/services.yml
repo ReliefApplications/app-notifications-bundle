@@ -1,7 +1,7 @@
 services:
     Push_Manager:
         class: Reliefapps\NotificationBundle\Utils\PushManager
-        arguments: ["%reliefapps_notification.ios.push_certificate%", "%reliefapps_notification.ios.push_passphrase%", "%reliefapps_notification.android.server_key%", "@service_container"]
+        arguments: ["%reliefapps_notification.ios.push_certificate%", "%reliefapps_notification.ios.push_passphrase%", "%reliefapps_notification.ios.protocol%", "%reliefapps_notification.android.server_key%", "@service_container"]
 
     Notification_Dispatcher:
         class: Reliefapps\NotificationBundle\Utils\NotificationDispatcher

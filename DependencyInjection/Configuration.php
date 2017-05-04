@@ -35,6 +35,7 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('push_certificate')->end()
                         ->scalarNode('push_passphrase')->end()
+                        ->enumNode('protocol')->values(array('legacy', 'http2'))->defaultValue('http2')->end()
                     ->end()
                 ->end()
             ->end();

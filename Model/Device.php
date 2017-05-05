@@ -5,7 +5,7 @@ namespace Reliefapps\NotificationBundle\Model;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Device
+ * @ORM\MappedSuperclass
  */
 class Device
 {
@@ -14,48 +14,39 @@ class Device
     const TYPE_WINDOWS = 2;
 
     /**
-     * @var int
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
-
-    /**
      * @var string
      *
      * @ORM\Column(name="uuid", type="string", length=255)
      */
-    private $uuid;
+    protected $uuid;
 
     /**
      * @var string
      *
      * @ORM\Column(name="token", type="string", length=255)
      */
-    private $token;
+    protected $token;
 
     /**
      * @var int
      *
      * @ORM\Column(name="type", type="smallint", nullable=true)
      */
-    private $type;
+    protected $type;
 
     /**
     * @var boolean
     *
     * @ORM\Column(name="acceptPush", type="boolean", nullable=true)
     */
-    private $acceptPush;
+    protected $acceptPush;
 
     /**
      * @var \DateTime
      *
      * @ORM\Column(name="creationDate", type="datetime", nullable=true)
      */
-    private $creationDate;
+    protected $creationDate;
 
 
     // ==================================================================================

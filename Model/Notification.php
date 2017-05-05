@@ -1,12 +1,11 @@
 <?php
 
-  namespace Reliefapps\NotificationBundle\Entity;
+  namespace Reliefapps\NotificationBundle\Model;
 
   use Doctrine\ORM\Mapping as ORM;
 
 /**
 * Notification
-* @ORM\Entity()
 */
 class Notification
 {

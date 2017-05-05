@@ -5,8 +5,8 @@ namespace Reliefapps\NotificationBundle\Utils;
 use Reliefapps\NotificationBundle\Utils\PushManager;
 
 //Entities
-use Reliefapps\NotificationBundle\Entity\Notification;
-use Reliefapps\NotificationBundle\Entity\UserDevice;
+use Reliefapps\NotificationBundle\Model\Notification;
+use Reliefapps\NotificationBundle\Model\UserDevice;
 
 class NotificationDispatcher{
 

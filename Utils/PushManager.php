@@ -3,6 +3,8 @@
 namespace Reliefapps\NotificationBundle\Utils;
 
 use Monolog\Logger;
+use Reliefapps\NotificationBundle\Model\Device;
+use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
 
 class PushManager
 {
@@ -23,36 +25,34 @@ class PushManager
     /**
      * Send push notifications directly to mobile devices
      *
-     * @param registrationIDs : Array of ids - device token that should receive the notification
-     * @param title           : title of the notification
+     * @param devices Array[ReliefappsNotificationBundle:Device] List of devices to send notifications to
+     * @param body NotificationBody Body of the notification
      */
-    public function sendPush($registrationIDs, $title)
+    public function sendPush($devices, NotificationBody $body)
     {
-        // Android device tokens are 152 - IOs device tokens 64
-        // Create 2 arrays ios_tokens and android tokens
         $ios_tokens = [];
         $android_tokens = [];
 
         $logger = $this->container->get('logger');
 
-        foreach ($registrationIDs as $key) {
-            if (strlen($key) == 64) {
-                array_push($ios_tokens, $key);
-                $logger->info("iOS device detected. Key : ".$key);
+        foreach ($devices as $device) {
+            if ($device->getType() == Device::TYPE_IOS) {
+                array_push($ios_tokens, $device->getToken());
+                $logger->debug("iOS device detected. Key : ".$device->getToken());
             }
-            elseif (strlen($key) == 152) {
-                array_push($android_tokens, $key);
-                $logger->info("Android device detected. Key : ".$key);
+            elseif ($device->getType() == Device::TYPE_ANDROID) {
+                array_push($android_tokens, $device->getToken());
+                $logger->debug("Android device detected. Key : ".$device->getToken());
             } else{
-                $logger->warning('Invalid Push token ' . $key . ' (length ' . strlen($key) . ') ');
+                $logger->warning('Invalid Device type ' . $device->getToken() . ' (type ' . $device->getType() . ') ');
             }
         }
 
-        $this->sendPushAndroid($android_tokens, $title);
+        $this->sendPushAndroid($android_tokens, $body);
         if( $this->iosProtocol == 'legacy'){
-            $this->sendPushIOSLegacy($ios_tokens, $title);
+            $this->sendPushIOSLegacy($ios_tokens, $body);
         }else{
-            $this->sendPushIOSHttp2($ios_tokens, $title);
+            $this->sendPushIOSHttp2($ios_tokens, $body);
         }
 
     }
@@ -63,7 +63,7 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param title           : title of the notification
      */
-    public function sendPushAndroid($deviceTokens, $title)
+    public function sendPushAndroid($deviceTokens, $body)
     {
         $logger = $this->container->get('logger');
         // ANDROID
@@ -72,7 +72,7 @@ class PushManager
 
         $fields = array(
             'registration_ids'  => $deviceTokens,
-            'data'              => array( "title" => "Crises" , "message" => $title ),
+            'data'              => $body->getPayload(NotificationBody::PAYLOAD_ARRAY_ANDROID),
             );
 
         $headers = array(
@@ -93,7 +93,17 @@ class PushManager
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
         curl_setopt( $ch, CURLOPT_POSTFIELDS, json_encode( $fields ) );
 
-        $result = curl_exec($ch);
+        $response = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if($httpcode == 0){
+            $logger->error('GCM server return an error : ' . $response);
+        }
+        elseif($httpcode != 200){
+            $logger->error('GCM server returned an error : (' . $httpcode . ') ' . $response);
+        }else{
+            $logger->debug('GCM server returned : ' . $response);
+        }
 
         curl_close($ch);
     }
@@ -102,9 +112,9 @@ class PushManager
      * Send push notifications for IOS (HTTP/2 APNS protocol)
      *
      * @param deviceTokens : Array of ids - device token that should receive the notification
-     * @param title           : title of the notification
+     * @param body          : body of the notification
      */
-    public function sendPushIOSHttp2($deviceTokens, $title)
+    public function sendPushIOSHttp2($deviceTokens, $body)
     {
         $logger = $this->container->get('logger');
         //IOS HTTP/2 APNs Protocol
@@ -115,11 +125,7 @@ class PushManager
         //$headers = array("authorization: ", "apns-id: ", "apns-expiration: ", "apns-priority: ", "apns-topic: ", "apns-collapse-id: ")
         $headers = array("apns-topic: org.reliefapps.emalsys");
 
-        $fields = array("aps" => array(
-                            "alert" => $title,
-                            "sound" => "default",
-                        ));
-        $fields_json = json_encode($fields);
+        $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
@@ -173,21 +179,16 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param title           : title of the notification
      */
-    public function sendPushIOSLegacy($deviceTokens, $title)
+    public function sendPushIOSLegacy($deviceTokens, $body)
     {
         $logger = $this->container->get('logger');
 
         if (file_exists($this->iosCertificate))  // Si le certificat est présent = environnement de prod
         {
             $logger->info("iOS certificate detected");
-            // Create the payload body
-            $body['aps'] = array(
-                'alert' => $title,
-                'sound' => 'default',
-            );
 
             // Encode the payload as JSON
-            $payload = json_encode($body);
+            $payload = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
 
             // Slicing the tokens in arrays of 10 to limit damage in case of error
             if(self::IOS_NOTIFICATION_CHAIN_LENGTH > 1){

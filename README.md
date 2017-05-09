@@ -72,3 +72,21 @@ If it works, you can remove the line :
 ```
 in your `app/config/config.yml` file.
 
+
+Usage
+=====
+
+Step 1: Create a Device Entity
+------------------------------
+
+First you will need to create you own Device Entity extending this Bundle's ReliefappsNotificationBundle:Device entity.
+
+That way you can associate a device to one/several Users.
+
+Step 2: Register some devices
+-----------------------------
+
+In a stragic api controler (login, homepage), register the device UUID and token
+
+
+

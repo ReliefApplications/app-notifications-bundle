@@ -133,7 +133,7 @@ class PushManager
         $logger = $this->container->get('logger');
         //IOS HTTP/2 APNs Protocol
         if (!(curl_version()["features"] & CURL_VERSION_HTTP2 !== 0)) {
-            $logger->warning('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
+            $logger->error('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
             return false;
         }
         //$headers = array("authorization: ", "apns-id: ", "apns-expiration: ", "apns-priority: ", "apns-topic: ", "apns-collapse-id: ")

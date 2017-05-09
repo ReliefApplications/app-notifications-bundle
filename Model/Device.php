@@ -49,14 +49,17 @@ abstract class Device
     protected $creationDate;
 
 
-    // ==================================================================================
-    // Automatic generate functions
-    // ==================================================================================
-
-    public function __construct(){
+    public function __construct($uuid, $type){
+        $this->uuid = $uuid;
+        $this->type = $type;
         $this->setAcceptPush(true);
         $this->setCreationDate(new \DateTime);
     }
+
+
+    // ==================================================================================
+    // Automatic generate functions
+    // ==================================================================================
 
     /**
      * Get id

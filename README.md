@@ -63,7 +63,7 @@ For improved error management for iOS notifications, you will need http2 support
 
 Once you have followed this tutorial, check that cURL supports HTTP/2 by running :
 ```bash
-curl --http2 -I https://nghttp2.org/
+$ curl --http2 -I https://nghttp2.org/
 ```
 
 If it works, you can remove the line :
@@ -81,12 +81,93 @@ Step 1: Create a Device Entity
 
 First you will need to create you own Device Entity extending this Bundle's ReliefappsNotificationBundle:Device entity.
 
-That way you can associate a device to one/several Users.
+Then complete your `app/config/config.yml` file with :
+```yml
+reliefapps_notification:
+    #...
+    device:
+        class: YourBundle\Entity\Device
+```
 
 Step 2: Register some devices
 -----------------------------
 
-In a stragic api controler (login, homepage), register the device UUID and token
+In a stragic api controler (login, homepage), register the device UUID and token :
+```php
 
+<?php
 
+// ...
+class YourController
+{
+    // ...
+    public function YourAction()
+    {
+        // ...
+        // Get the Device Manager
+        $deviceManager = $this->get('reliefapps_notification.device.manager');
+
+        // Create a new device
+        $newDevice = $deviceManager->createDevice($uuid, $platform);
+        $newDevice->setToken($token);
+
+        // Save the device in database
+        $deviceManager->udpateDevice($newDevice);
+
+    }
+}
+```
+
+Step 3: Create a notification Body
+----------------------------------
+
+The class *NotificationBody* allows you to create the content of a push notification.
+
+```php
+<?php
+
+use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
+
+// ...
+class YourController
+{
+    // ...
+    public function YourAction()
+    {
+        // ...
+        $body = new NotificationBody();
+        $body ->setTitle('Notification Title')      // Title of the notification
+              ->setBody('This is a notification !') // Text of the notification
+              ->setBadge(42);                       // Badge on the app icon (iOS only)
+    }
+}
+```
+
+Step 4: Send a push notification
+--------------------------------
+
+You are ready to send your first Push Notification !
+
+The function *sendPush* takes an array of devices and a notification body, and sends the Push notifications to the devices !
+
+If a token is invalid, it will be set to null on your database automatically.
+
+```php
+<?php
+
+// ...
+class YourController
+{
+    // ...
+    public function YourAction()
+    {
+        // ...
+        // Get the Push Manager
+        $pushManager = $this->container->get('reliefapps_notification.push_manager');
+
+        // Send a push notification to devices $device1 and $device2
+        $pushManager->sendPush(Array($device1, $device2), $body);
+    }
+}
+```
 

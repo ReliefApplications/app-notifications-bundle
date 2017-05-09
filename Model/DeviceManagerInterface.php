@@ -7,9 +7,11 @@ interface DeviceManagerInterface
     /**
      *  Create a new Device Entity
      *
+     *  @param String $uuid
+     *  @param Integer $platform
      *  @return Device
      */
-    public function createDevice();
+    public function createDevice($uuid, $platform);
 
     /**
      *  Remove a Device Entity

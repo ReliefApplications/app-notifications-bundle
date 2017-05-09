@@ -33,7 +33,7 @@ class AppKernel extends Kernel
         $bundles = array(
             // ...
 
-            new Reliefapps\ReliefappsNotificationBundle\ReliefappsNotificationBundle(),
+            new Reliefapps\NotificationBundle\ReliefappsNotificationBundle(),
         );
 
         // ...

@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\MappedSuperclass
  */
-class Device
+abstract class Device
 {
     const TYPE_ANDROID = 0;
     const TYPE_IOS     = 1;
@@ -23,7 +23,7 @@ class Device
     /**
      * @var string
      *
-     * @ORM\Column(name="token", type="string", length=255)
+     * @ORM\Column(name="token", type="string", length=255, nullable=true)
      */
     protected $token;
 

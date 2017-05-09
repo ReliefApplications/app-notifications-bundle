@@ -13,14 +13,16 @@ class PushManager
 
     const IOS_HTTP_TIMEOUT = 1000;
 
-    public function __construct($em, $ios_push_certificate, $ios_push_passphrase, $ios_protocol, $android_server_key, $container)
+
+
+    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol, $android_server_key, $container)
     {
-        $thi->em = $em;
         $this->iosCertificate = $ios_push_certificate;
         $this->iosPassphrase  = $ios_push_passphrase;
         $this->iosProtocol = $ios_protocol;
         $this->android_server_key = $android_server_key;
         $this->container = $container;
+        $this->device_manager = $container->get('reliefapps_notification.device.manager.doctrine');
     }
 
     /**
@@ -66,6 +68,10 @@ class PushManager
      */
     public function sendPushAndroid($devices, $body)
     {
+        if(empty($devices)){
+            return true;
+        }
+
         $logger = $this->container->get('logger');
         // ANDROID
         $url = 'https://android.googleapis.com/gcm/send';
@@ -101,13 +107,16 @@ class PushManager
         $response = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if($httpcode == 0){
-            $logger->error('GCM server return an error : ' . $response);
-        }
-        elseif($httpcode != 200){
-            $logger->error('GCM server returned an error : (' . $httpcode . ') ' . $response);
-        }else{
-            $logger->debug('GCM server returned : ' . $response);
+        switch ($httpcode) {
+            case 200:
+                $logger->debug('GCM server returned : ' . $response);
+                break;
+            case 0:
+                $logger->error('GCM server return an error : ' . $response);
+                break;
+            default:
+                $logger->error('GCM server returned an error : (' . $httpcode . ') ' . $response);
+                break;
         }
 
         curl_close($ch);
@@ -150,6 +159,10 @@ class PushManager
             curl_setopt( $ch, CURLOPT_URL, $url );
 
             $response = curl_exec($ch);
+            // Then, after your curl_exec call:
+            $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+            $header = substr($response, 0, $header_size);
+            $body = substr($response, $header_size);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
             switch ($httpcode) {
@@ -163,13 +176,18 @@ class PushManager
                     }
                     break;
                 case 410: // 410 The device token is no longer active for the topic.
-                    $response_array = json_decode($response);
+                    $response_array = json_decode($body, true);
                     $logger->debug('APNs server returned  : (' . $httpcode . ') ' . $response_array["reason"]);
+                    $device->setToken(null);
+                    $this->device_manager->updateDevice($device);
+                    $logger->debug('Device token is no longer active, token removed from database.');
                     break;
-                case 400:
-                    $response_array = json_decode($response);
+                case 400: // 400 Bad request
+                    $response_array = json_decode($body, true);
                     $logger->debug('APNs server returned  : (' . $httpcode . ') ' . $response_array["reason"]);
                     if( $response_array["reason"] == 'BadDeviceToken'){
+                        $device->setToken(null);
+                        $this->device_manager->updateDevice($device);
                         $logger->warning('Bad device Token, token removed from database.');
                     }
                     break;
@@ -177,16 +195,6 @@ class PushManager
                 default:
                     $logger->error('APNs server returned an error : (' . $httpcode . ') ' . $response);
                     break;
-            }
-            if($httpcode == 0){
-
-            }
-            elseif($httpcode != 200){
-                $logger->error('APNs server returned an error : (' . $httpcode . ') ' . $response);
-            }elseif($httpcode != 410){
-                $logger->debug('Invalid token detected : (' . $httpcode . ') ' . $response);
-            }else{
-                $logger->debug('APNs server returned : ' . $response);
             }
         }
 
@@ -197,7 +205,6 @@ class PushManager
         // 400 Bad request
         // 403 There was an error with the certificate or with the provider authentication token
         // 405 The request used a bad :method value. Only POST requests are supported.
-        /
         // 413 The notification payload was too large.
         // 429 The server received too many requests for the same device token.
         // 500 Internal server error

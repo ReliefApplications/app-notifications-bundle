@@ -1,8 +1,13 @@
 services:
-    Push_Manager:
+    reliefapps_notification.push_manager:
         class: Reliefapps\NotificationBundle\Utils\PushManager
         arguments: ["%reliefapps_notification.ios.push_certificate%", "%reliefapps_notification.ios.push_passphrase%", "%reliefapps_notification.ios.protocol%", "%reliefapps_notification.android.server_key%", "@service_container"]
 
     Notification_Dispatcher:
         class: Reliefapps\NotificationBundle\Utils\NotificationDispatcher
-        arguments: ["@Push_Manager"]
+        arguments: ["@reliefapps_notification.push_manager"]
+
+    reliefapps_notification.device.manager.doctrine:
+        class:  Reliefapps\NotificationBundle\Doctrine\DeviceManager
+        arguments: ["@doctrine.orm.entity_manager", "%reliefapps_notification.device.class%"]
+        #public: false

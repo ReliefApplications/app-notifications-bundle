@@ -1,5 +1,11 @@
 # CHANGELOG
 
+### v0.2
+
+- added **guessPlatform** function in Device
+
+- added **updateToken** function in DeviceManager
+
 ### v0.1 First Dev release
 
 - 2 platforms supported : **iOS** (APNs) and **Android** (Google)
@@ -12,4 +18,4 @@
 
 - **Doctrine ORM** natively supported
 
-- Automatic suppression of **iOS invalid or expired token** (for HTTP/2 API)
+- Automatic suppression of **iOS invalid or expired tokens** (for HTTP/2 API)

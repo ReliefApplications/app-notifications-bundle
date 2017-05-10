@@ -11,7 +11,7 @@ interface DeviceManagerInterface
      *  @param Integer $platform
      *  @return Device
      */
-    public function createDevice($uuid, $platform);
+    public function createDevice($uuid, $platform = null);
 
     /**
      *  Remove a Device Entity
@@ -80,6 +80,16 @@ interface DeviceManagerInterface
      *  @param Boolean $andFlush
      */
     public function updateDevice($device, $andFlush = true);
+
+    /**
+     *  Update the token and platform for a given uuid
+     *
+     *  @param String $uuid
+     *  @param String $token
+     *  @param String $platform
+     *  @return Device
+     */
+    public function updateToken($uuid, $token, $platform = null);
 
 
 }

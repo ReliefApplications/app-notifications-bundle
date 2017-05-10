@@ -79,7 +79,45 @@ Usage
 Step 1: Create a Device Entity
 ------------------------------
 
-First you will need to create you own Device Entity extending this Bundle's ReliefappsNotificationBundle:Device entity.
+First you will need to create you own Device Entity extending this Bundle's *ReliefappsNotificationBundle:Device* entity.
+
+For example this entity extends *Device* and adds an id and an User field.
+
+```php
+<?php
+
+namespace YourBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+use Reliefapps\NotificationBundle\Model\Device as BaseDevice;
+
+/**
+ * UserDevice : link an user to a Device
+ * This class extends Reliefapps\NotificationBundle\Model\Device
+ *
+ * @ORM\Entity
+ */
+class UserDevice extends BaseDevice
+{
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="YourBundle\Entity\User", cascade={"persist"})
+     * @ORM\JoinColumn(nullable=false, onDelete="CASCADE")
+     */
+    private $user;
+
+    // ...
+}
+```
 
 Then complete your `app/config/config.yml` file with :
 ```yml
@@ -136,9 +174,9 @@ class YourController
     {
         // ...
         $body = new NotificationBody();
-        $body ->setTitle('Notification Title')      // Title of the notification
-              ->setBody('This is a notification !') // Text of the notification
-              ->setBadge(42);                       // Badge on the app icon (iOS only)
+        $body ->setTitle("The Whale")                       // Title of the notification
+              ->setBody("Ahhh! Woooh! What's happening?")   // Text of the notification
+              ->setBadge(42);                               // Badge on the app icon (iOS only)
     }
 }
 ```

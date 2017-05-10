@@ -56,6 +56,26 @@ abstract class Device
         $this->setCreationDate(new \DateTime);
     }
 
+    /**
+     * Guess Platform based on the UUID size
+     *
+     *  Warning : This function is not bullet-proof, any guess could be wrong.
+     *
+     * @param boolean $forceGuess If force guess is true, it will always set the platform to the closest match, otherwise it will only set the platform on a perfect match.
+     *
+     * @return Device
+     */
+    public function guessPlatform($forceGuess = true)
+    {
+        $length = strlen($this->getUuid());
+        if( ($forceGuess && $length > 20) || $length == 36 ){
+            $this->setType($this::TYPE_IOS); // IOS devices are supposed to have a standard RFC4122 36 characters long UUID
+        }elseif( $forceGuess || $length == 16 ){
+            $this->setType($this::TYPE_ANDROID); // ANDROID devices are supposed to have a compact 16 characters long UUID
+        }
+
+        return $this;
+    }
 
     // ==================================================================================
     // Automatic generate functions

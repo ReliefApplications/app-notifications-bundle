@@ -21,7 +21,7 @@ abstract class DeviceManager implements DeviceManagerInterface
      */
     public function findDevicesByPlatforms(array $types)
     {
-        $this->findDevicesBy(array('type' => $types));
+        return $this->findDevicesBy(array('type' => $types));
     }
 
     /**
@@ -29,7 +29,7 @@ abstract class DeviceManager implements DeviceManagerInterface
      */
     public function findDeviceByUUID($uuid)
     {
-        $this->findOneDeviceBy(array('uuid' => $uuid));
+        return $this->findOneDeviceBy(array('uuid' => $uuid));
     }
 
 }

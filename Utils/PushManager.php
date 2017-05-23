@@ -112,7 +112,7 @@ class PushManager
                 $logger->debug('GCM server returned : ' . $response);
                 break;
             case 0:
-                $logger->error('GCM server return an error : ' . $response);
+                $logger->error('Unable to connect to the GCM server : ' . curl_error($ch));
                 break;
             default:
                 $logger->error('GCM server returned an error : (' . $httpcode . ') ' . $response);
@@ -170,7 +170,7 @@ class PushManager
                     $logger->debug('APNs server returned : ' . $response);
                     break;
                 case 0:
-                    $logger->error('APNs server return an error : ' . $response);
+                    $logger->error('Unable to connect to the APNs server : ' . $response . curl_error($ch));
                     if( preg_match('/HTTP\/2/', $response) ){
                         $logger->warning('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
                     }

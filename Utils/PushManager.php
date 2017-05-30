@@ -42,7 +42,10 @@ class PushManager
         $logger = $this->container->get('logger');
 
         foreach ($devices as $device) {
-            if ($device->getType() == Device::TYPE_IOS) {
+            if($device->getToken() == null){
+                $logger->debug("Tokenless device ignored. UUID : ".$device->getUUID());
+            }
+            elseif ($device->getType() == Device::TYPE_IOS) {
                 array_push($ios_devices, $device);
                 $logger->debug("iOS device detected. Key : ".$device->getToken());
             }

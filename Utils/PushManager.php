@@ -15,12 +15,15 @@ class PushManager
 
 
 
-    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol, $android_server_key, $container)
+    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol,  $apns_server, $apns_topic, $android_server_key, $gcm_server,  $container)
     {
         $this->iosCertificate = $ios_push_certificate;
         $this->iosPassphrase  = $ios_push_passphrase;
         $this->iosProtocol = $ios_protocol;
+        $this->apns_server = $apns_server;
+        $this->apns_topic = $apns_topic;
         $this->android_server_key = $android_server_key;
+        $this->gcm_server = $gcm_server;
         $this->container = $container;
         $this->device_manager = $container->get('reliefapps_notification.device.manager.doctrine');
     }
@@ -74,7 +77,7 @@ class PushManager
 
         $logger = $this->container->get('logger');
         // ANDROID
-        $url = 'https://android.googleapis.com/gcm/send';
+        $url = "https://$this->gcm_server/gcm/send";
         $apiKey = $this->android_server_key;
 
         $getToken = function($obj){ return $obj->getToken(); };
@@ -138,7 +141,7 @@ class PushManager
             return false;
         }
         //$headers = array("authorization: ", "apns-id: ", "apns-expiration: ", "apns-priority: ", "apns-topic: ", "apns-collapse-id: ")
-        $headers = array("apns-topic: org.reliefapps.emalsys");
+        $headers = array("apns-topic: $this->apns_topic");
 
         $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
         $logger->debug("iOS Payload : " . $fields_json);
@@ -157,7 +160,7 @@ class PushManager
 
         foreach($devices as $device){
             $token = $device->getToken();
-            $url = "https://api.push.apple.com/3/device/$token";
+            $url = "https://$this->apns_server/3/device/$token";
             curl_setopt( $ch, CURLOPT_URL, $url );
 
             $response = curl_exec($ch);

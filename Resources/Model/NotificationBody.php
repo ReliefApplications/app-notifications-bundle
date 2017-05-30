@@ -247,6 +247,18 @@ class NotificationBody
     }
 
     /**
+     * Add an action
+     *
+     * @return Array
+     */
+    public function addAction($action)
+    {
+        $this->actions[] = $action;
+
+        return $this;
+    }
+
+    /**
      * Set the value of Actions
      *
      * @param Array actions

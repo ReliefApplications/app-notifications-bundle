@@ -85,6 +85,7 @@ class PushManager
             'registration_ids'  => $deviceTokens,
             'data'              => $body->getPayload(NotificationBody::PAYLOAD_ARRAY_ANDROID),
             );
+        $logger->debug("Android Payload : " . json_encode($fields));
 
         $headers = array(
             'Authorization: key=' . $apiKey,
@@ -140,6 +141,7 @@ class PushManager
         $headers = array("apns-topic: org.reliefapps.emalsys");
 
         $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
+        $logger->debug("iOS Payload : " . $fields_json);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
@@ -166,7 +168,7 @@ class PushManager
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
             switch ($httpcode) {
-                case 200:
+                case 200: // 200 Success
                     $logger->debug('APNs server returned : ' . $response);
                     break;
                 case 0:
@@ -193,22 +195,17 @@ class PushManager
                     break;
 
                 default:
+                    // 403 There was an error with the certificate or with the provider authentication token
+                    // 405 The request used a bad :method value. Only POST requests are supported.
+                    // 413 The notification payload was too large.
+                    // 429 The server received too many requests for the same device token.
+                    // 500 Internal server error
+                    // 503 The server is shutting down and unavailable.
                     $logger->error('APNs server returned an error : (' . $httpcode . ') ' . $response);
                     break;
             }
         }
-
         curl_close($ch);
-
-
-        // 200 Success
-        // 400 Bad request
-        // 403 There was an error with the certificate or with the provider authentication token
-        // 405 The request used a bad :method value. Only POST requests are supported.
-        // 413 The notification payload was too large.
-        // 429 The server received too many requests for the same device token.
-        // 500 Internal server error
-        // 503 The server is shutting down and unavailable.
     }
 
     /**

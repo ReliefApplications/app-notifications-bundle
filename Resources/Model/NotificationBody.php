@@ -9,90 +9,49 @@ class NotificationBody
     const PAYLOAD_JSON_IOS      = 1;
 
     /**
-     *  @var String Title of the notification
+     *  @var String
+     *  Title of the notification
      */
     private $title;
 
     /**
-     *  @var String Body of the notification
+     *  @var String
+     *  Body of the notification
      */
     private $body;
 
     /**
-     *  @var Integer Badge number to display on the app
+     *  @var Integer
+     *  Badge number to display on the app
      */
     private $badge;
 
     /**
-     *  Set the title of the notification
-     *
-     *  @param String $title
-     *
-     *  @return NotificationBody
+     *  @var Array
+     *  Color or the led for android
      */
-    public function setTitle( $title )
-    {
-        $this->title = $title;
-
-        return $this;
-    }
+    private $ledColor;
 
     /**
-     *  Get the title of the notification
-     *
-     *  @return String $title
+     *  @var String
+     *  Category of the notification, used for custom type coded on app side
      */
-    public function getTitle()
-    {
-        return $this->title;
-    }
+    private $category;
 
     /**
-     *  Set the body of the notification
-     *
-     *  @param String $body
-     *
-     *  @return NotificationBody
+     *  @var Array
+     *  List of android actions
      */
-    public function setBody( $body )
+    private $actions;
+
+    public function __construct()
     {
-        $this->body = $body;
-
-        return $this;
-    }
-
-    /**
-     *  Get the body of the notification
-     *
-     *  @return String $body
-     */
-    public function getBody()
-    {
-        return $this->body;
-    }
-
-    /**
-     *  Set the badge of the notification
-     *
-     *  @param Integer $badge
-     *
-     *  @return NotificationBody
-     */
-    public function setBadge( $badge )
-    {
-        $this->badge = $badge;
-
-        return $this;
-    }
-
-    /**
-     *  Get the badge of the notification
-     *
-     *  @return String $badge
-     */
-    public function getBadge()
-    {
-        return $this->badge;
+        $this->title    = null;
+        $this->body     = null;
+        $this->badge    = null;
+        $this->ledColor = null;
+        $this->category = null;
+        $this->actions  = null;
     }
 
     /**
@@ -121,22 +80,184 @@ class NotificationBody
     private function getiOSPayload()
     {
         $payload = array(
-                'aps' => array(
+                "aps" => array(
                     "alert" => array(
                         "title" => $this->getTitle(),
                         "body"  => $this->getBody(),
                     ),
-                    "badge" => $this->getBadge(),
                 )
         );
+        if($this->getBadge()){
+            $payload["aps"]["badge"] = $this->getBadge();
+        }
+        if($this->getCategory()){
+            $payload["aps"]["category"] = $this->getCategory();
+        }
 
         return json_encode($payload);
     }
 
     private function getAndroidPayload()
     {
-        $payload = array( "title" => $this->getTitle() , "message" => $this->getBody() );
+        $payload = array();
+        if($this->getTitle()){
+            $payload["title"] = $this->getTitle();
+        }
+        if($this->getBody()){
+            $payload["message"] = $this->getBody();
+        }
+        if($this->getActions()){
+            $payload["actions"] = $this->getActions();
+        }
+        if($this->getLedColor()){
+            $payload["ledColor"] = $this->getLedColor();
+        }
 
         return $payload;
     }
+
+    /**
+     * Get the value of Title
+     *
+     * @return String
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    /**
+     * Set the value of Title
+     *
+     * @param String title
+     *
+     * @return self
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Body
+     *
+     * @return String
+     */
+    public function getBody()
+    {
+        return $this->body;
+    }
+
+    /**
+     * Set the value of Body
+     *
+     * @param String body
+     *
+     * @return self
+     */
+    public function setBody($body)
+    {
+        $this->body = $body;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Badge
+     *
+     * @return Integer
+     */
+    public function getBadge()
+    {
+        return $this->badge;
+    }
+
+    /**
+     * Set the value of Badge
+     *
+     * @param Integer badge
+     *
+     * @return self
+     */
+    public function setBadge($badge)
+    {
+        $this->badge = $badge;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Led Color
+     *
+     * @return Array
+     */
+    public function getLedColor()
+    {
+        return $this->ledColor;
+    }
+
+    /**
+     * Set the value of Led Color
+     *
+     * @param Array ledColor
+     *
+     * @return self
+     */
+    public function setLedColor($ledColor)
+    {
+        $this->ledColor = $ledColor;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Category
+     *
+     * @return String
+     */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * Set the value of Category
+     *
+     * @param String category
+     *
+     * @return self
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Actions
+     *
+     * @return Array
+     */
+    public function getActions()
+    {
+        return $this->actions;
+    }
+
+    /**
+     * Set the value of Actions
+     *
+     * @param Array actions
+     *
+     * @return self
+     */
+    public function setActions($actions)
+    {
+        $this->actions = $actions;
+
+        return $this;
+    }
+
 }

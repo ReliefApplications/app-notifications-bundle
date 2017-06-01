@@ -4,6 +4,7 @@ namespace Reliefapps\NotificationBundle\Utils;
 
 use Reliefapps\NotificationBundle\Model\Device;
 use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
+use Symfony\Component\DependencyInjection\Container;
 
 
 /**
@@ -20,7 +21,7 @@ class PushManager
 
 
 
-    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol,  $apns_server, $apns_topic, $android_server_key, $gcm_server,  $container)
+    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol,  $apns_server, $apns_topic, $android_server_key, $gcm_server, Container $container)
     {
         $this->iosCertificate = $ios_push_certificate;
         $this->iosPassphrase  = $ios_push_passphrase;
@@ -39,7 +40,7 @@ class PushManager
      * @param devices Array[ReliefappsNotificationBundle:Device] List of devices to send notifications to
      * @param body NotificationBody Body of the notification
      */
-    public function sendPush($devices, NotificationBody $body)
+    public function sendPush(array $devices, NotificationBody $body)
     {
         $ios_devices = [];
         $android_devices = [];
@@ -75,9 +76,9 @@ class PushManager
      * Send push notifications for Android
      *
      * @param devices : Array of Devices - device that should receive the notification
-     * @param title           : title of the notification
+     * @param body           : title of the notification
      */
-    public function sendPushAndroid($devices, $body)
+    public function sendPushAndroid(array $devices, NotificationBody $body)
     {
         if(empty($devices)){
             return true;
@@ -138,9 +139,9 @@ class PushManager
      * Send push notifications for IOS (HTTP/2 APNS protocol)
      *
      * @param deviceTokens : Array of ids - device token that should receive the notification
-     * @param body          : body of the notification
+     * @param body         : body of the notification
      */
-    public function sendPushIOSHttp2($devices, $body)
+    public function sendPushIOSHttp2(array $devices, NotificationBody $body)
     {
         $logger = $this->container->get('logger');
         //IOS HTTP/2 APNs Protocol
@@ -148,7 +149,6 @@ class PushManager
             $logger->error('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
             return false;
         }
-        //$headers = array("authorization: ", "apns-id: ", "apns-expiration: ", "apns-priority: ", "apns-topic: ", "apns-collapse-id: ")
         $headers = array("apns-topic: $this->apns_topic");
 
         $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
@@ -174,7 +174,6 @@ class PushManager
             $response = curl_exec($ch);
             // Then, after your curl_exec call:
             $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            //$header = substr($response, 0, $header_size);
             $body = substr($response, $header_size);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -225,7 +224,7 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param title           : title of the notification
      */
-    public function sendPushIOSLegacy($devices, $body)
+    public function sendPushIOSLegacy(array $devices, NotificationBody $body)
     {
         $getToken = function($obj){ return $obj->getToken(); };
         $deviceTokens = array_map($getToken, $devices);
@@ -267,7 +266,7 @@ class PushManager
                         $msg = chr(0) . pack('n', 32) . pack('H*', $id) . pack('n', strlen($payload)) . $payload;
 
                         // Send it to the server
-                        fwrite($fp, $msg, strlen($msg)); // TODO catch error
+                        fwrite($fp, $msg, strlen($msg));
                     }
                     $logger->debug('iOS notification chain sent.');
 

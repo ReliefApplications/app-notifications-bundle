@@ -8,6 +8,9 @@ use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Reliefapps\NotificationBundle\Model\DeviceManager as BaseDeviceManager;
 
+/**
+ * {@inheritdoc}
+ */
 class DeviceManager extends BaseDeviceManager
 {
     private $objectManager;

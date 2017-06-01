@@ -173,5 +173,4 @@ class AndroidAction
 
         return $this;
     }
-
 }

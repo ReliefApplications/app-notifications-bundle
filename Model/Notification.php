@@ -5,7 +5,8 @@
   use Doctrine\ORM\Mapping as ORM;
 
 /**
-* Notification
+*  Notification
+*  Used to save send notifications
 */
 class Notification
 {

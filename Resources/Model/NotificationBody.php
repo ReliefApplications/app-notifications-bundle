@@ -271,5 +271,4 @@ class NotificationBody
 
         return $this;
     }
-
 }

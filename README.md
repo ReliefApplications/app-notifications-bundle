@@ -8,8 +8,10 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
-$ composer require reliefapps-notification "~1"
+$ composer require reliefapps-notification "0.1.4"
 ```
+
+*NB: Before version 1, backward compatibility may be broken. It is advised to force a single version of the bundle has shown here*
 
 This command requires you to have Composer installed globally, as explained
 in the [installation chapter](https://getcomposer.org/doc/00-intro.md)
@@ -171,3 +173,32 @@ class YourController
 }
 ```
 
+Documentation
+=============
+
+Payloads
+--------
+
+Entity : Reliefapps\NotificationBundle\Resources\Model\NotificationBody
+
+|    Key   | Description                                | iOS | Android |
+| -------- | ------------------------------------------ | --- | ------- |
+|    title | Title                                      | [x] |   [x]   |
+|     body | Main text                                  | [x] |   [x]   |
+| ledColor | Led color on front of the phone            | [ ] |   [x]   |
+|  actions | List of action                             | [ ] |   [x]   |
+|    badge | Badge number on app icon                   | [x] |   [ ]   |
+| category | iOS category tag (defined in your app)     | [x] |   [ ]   |
+
+Android Action
+--------------
+
+Entity : Reliefapps\NotificationBundle\Resources\Model\AndroidAction
+
+|     Key    | Description                                | iOS | Android |
+| ---------- | ------------------------------------------ | --- | ------- |
+|       icon | Icon (name of an app drawable ressource)   | [ ] |   [x]   |
+|      title | Action text                                | [ ] |   [x]   |
+|   callback | Function to call as the button is clicked  | [ ] |   [x]   |
+| foreground | Open the app after click ? (default true)  | [ ] |   [x]   |
+|     inline | Use quick reply field ? (default false)    | [ ] |   [x]   |

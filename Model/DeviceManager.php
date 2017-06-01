@@ -2,9 +2,13 @@
 
 namespace Reliefapps\NotificationBundle\Model;
 
+use Reliefapps\NotificationBundle\Model\DeviceManager;
 use Reliefapps\NotificationBundle\Model\DeviceManagerInterface;
 
-
+/**
+ *  DeviceManager
+ *  The device manager allows you to create, search and modify devices regardless of your persistence backend.
+ */
 abstract class DeviceManager implements DeviceManagerInterface
 {
     /**
@@ -31,5 +35,4 @@ abstract class DeviceManager implements DeviceManagerInterface
     {
         return $this->findOneDeviceBy(array('uuid' => $uuid));
     }
-
 }

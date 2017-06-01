@@ -2,6 +2,10 @@
 
 namespace Reliefapps\NotificationBundle\Model;
 
+/**
+ *  DeviceManagerInterface
+ *  This interface define a device manager.
+ */
 interface DeviceManagerInterface
 {
     /**
@@ -80,6 +84,5 @@ interface DeviceManagerInterface
      *  @param Boolean $andFlush
      */
     public function updateDevice($device, $andFlush = true);
-
 
 }

@@ -2,13 +2,18 @@
 
 namespace Reliefapps\NotificationBundle\Utils;
 
-use Monolog\Logger;
 use Reliefapps\NotificationBundle\Model\Device;
 use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
 
+
+/**
+ *  Implements all the protocols to send notifications.
+ *  Supported protocols: APNs Legacy (Apple) for iOS, APNs HTTP2 (Apple) for iOS and GCM (Google) for Android
+ */
 class PushManager
 {
-    // iOS notifications are send by series of this length. Set to -1 to disable.
+    // APNs Legacy iOS notifications are send by series of this length. Set to -1 to disable.
+    // Warning: When set to 1, the system is not scalable. To many notifications will be consider a DDoS attack by APNs servers
     const IOS_NOTIFICATION_CHAIN_LENGTH = 1;
 
     const IOS_HTTP_TIMEOUT = 1000;
@@ -42,7 +47,7 @@ class PushManager
         $logger = $this->container->get('logger');
 
         foreach ($devices as $device) {
-            if($device->getToken() == null){
+            if($device->getToken() === null){
                 $logger->debug("Tokenless device ignored. UUID : ".$device->getUUID());
             }
             elseif ($device->getType() == Device::TYPE_IOS) {
@@ -147,7 +152,7 @@ class PushManager
         $headers = array("apns-topic: $this->apns_topic");
 
         $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
-        $logger->debug("iOS Payload : " . $fields_json);
+        $logger->debug("iOS Payload : $fields_json");
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
@@ -169,7 +174,7 @@ class PushManager
             $response = curl_exec($ch);
             // Then, after your curl_exec call:
             $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            $header = substr($response, 0, $header_size);
+            //$header = substr($response, 0, $header_size);
             $body = substr($response, $header_size);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -235,7 +240,7 @@ class PushManager
             $payload = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
 
             // Slicing the tokens in arrays of 10 to limit damage in case of error
-            if(self::IOS_NOTIFICATION_CHAIN_LENGTH > 1){
+            if(self::IOS_NOTIFICATION_CHAIN_LENGTH > 0){
                 $chunked_tokens = array_chunk($deviceTokens, self::IOS_NOTIFICATION_CHAIN_LENGTH);
             }else{
                 $chunked_tokens = array($deviceTokens);
@@ -262,7 +267,7 @@ class PushManager
                         $msg = chr(0) . pack('n', 32) . pack('H*', $id) . pack('n', strlen($payload)) . $payload;
 
                         // Send it to the server
-                        $result = fwrite($fp, $msg, strlen($msg));
+                        fwrite($fp, $msg, strlen($msg)); // TODO catch error
                     }
                     $logger->debug('iOS notification chain sent.');
 

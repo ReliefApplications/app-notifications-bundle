@@ -5,6 +5,9 @@ namespace Reliefapps\NotificationBundle\Model;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ *  Device Class
+ *  This class represents a device. To use it, extends this class and map it with ORM
+ *
  * @ORM\MappedSuperclass
  */
 abstract class Device

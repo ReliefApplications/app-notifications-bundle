@@ -3,8 +3,10 @@
 namespace Reliefapps\NotificationBundle\Utils;
 
 use Reliefapps\NotificationBundle\Model\Device;
+use Reliefapps\NotificationBundle\Model\DeviceManager;
 use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
 use Symfony\Component\DependencyInjection\Container;
+use Monolog\Logger;
 
 
 /**
@@ -19,9 +21,7 @@ class PushManager
 
     const IOS_HTTP_TIMEOUT = 1000;
 
-
-
-    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol,  $apns_server, $apns_topic, $android_server_key, $gcm_server, Container $container)
+    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol,  $apns_server, $apns_topic, $android_server_key, $gcm_server, DeviceManager $deviceManager, Logger $logger)
     {
         $this->iosCertificate = $ios_push_certificate;
         $this->iosPassphrase  = $ios_push_passphrase;
@@ -30,8 +30,8 @@ class PushManager
         $this->apns_topic = $apns_topic;
         $this->android_server_key = $android_server_key;
         $this->gcm_server = $gcm_server;
-        $this->container = $container;
-        $this->device_manager = $container->get('reliefapps_notification.device.manager.doctrine');
+        $this->device_manager = $deviceManager;
+        $this->logger = $logger;
     }
 
     /**
@@ -40,12 +40,12 @@ class PushManager
      * @param devices Array[ReliefappsNotificationBundle:Device] List of devices to send notifications to
      * @param body NotificationBody Body of the notification
      */
-    public function sendPush(array $devices, NotificationBody $body)
+    public function sendPush($devices, NotificationBody $body)
     {
         $ios_devices = [];
         $android_devices = [];
 
-        $logger = $this->container->get('logger');
+        $logger = $this->logger;
 
         foreach ($devices as $device) {
             if($device->getToken() === null){
@@ -84,14 +84,14 @@ class PushManager
             return true;
         }
 
-        $logger = $this->container->get('logger');
+        $logger = $this->logger;
         // ANDROID
         $url = "https://$this->gcm_server/gcm/send";
         $apiKey = $this->android_server_key;
 
-        $getToken = function($obj){ return $obj->getToken(); };
-
+        $getToken = function(Device $obj) {return $obj->getToken();};
         $deviceTokens = array_map($getToken, $devices);
+
 
         $fields = array(
             'registration_ids'  => $deviceTokens,
@@ -143,7 +143,7 @@ class PushManager
      */
     public function sendPushIOSHttp2(array $devices, NotificationBody $body)
     {
-        $logger = $this->container->get('logger');
+        $logger = $this->logger;
         //IOS HTTP/2 APNs Protocol
         if (!(curl_version()["features"] & CURL_VERSION_HTTP2 !== 0)) {
             $logger->error('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
@@ -226,10 +226,10 @@ class PushManager
      */
     public function sendPushIOSLegacy(array $devices, NotificationBody $body)
     {
-        $getToken = function($obj){ return $obj->getToken(); };
+        $getToken = function(Device $obj) {return $obj->getToken();};
         $deviceTokens = array_map($getToken, $devices);
 
-        $logger = $this->container->get('logger');
+        $logger = $this->logger;
 
         if (file_exists($this->iosCertificate))  // Si le certificat est présent = environnement de prod
         {

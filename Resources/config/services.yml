@@ -9,7 +9,8 @@ services:
             - "%reliefapps_notification.ios.apns_topic%"
             - "%reliefapps_notification.android.server_key%"
             - "%reliefapps_notification.android.gcm_server%"
-            - "@service_container"
+            - "@reliefapps_notification.device.manager.doctrine"
+            - "@monolog.logger"
 
     reliefapps_notification.device.manager.doctrine:
         class:  Reliefapps\NotificationBundle\Doctrine\DeviceManager

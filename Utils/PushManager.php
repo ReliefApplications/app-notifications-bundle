@@ -5,7 +5,6 @@ namespace Reliefapps\NotificationBundle\Utils;
 use Reliefapps\NotificationBundle\Model\Device;
 use Reliefapps\NotificationBundle\Model\DeviceManager;
 use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
-use Symfony\Component\DependencyInjection\Container;
 use Monolog\Logger;
 
 

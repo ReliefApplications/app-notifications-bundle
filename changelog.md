@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.1.5 Add test acceptPush
+
+- If the UserDevice has the acceptPush property set to false, no notification sent
+
 ### v0.1 First Dev release
 
 - 2 platforms supported : **iOS** (APNs) and **Android** (Google)

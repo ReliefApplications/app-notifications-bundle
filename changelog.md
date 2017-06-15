@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.1.6 Added Contexts
+
+- PushServer Parameters can be changed with contexts
+
 ### v0.1.5 Add test acceptPush
 
 - If the UserDevice has the acceptPush property set to false, no notification sent

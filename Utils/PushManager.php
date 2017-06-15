@@ -48,12 +48,16 @@ class PushManager
                 $logger->debug("Tokenless device ignored. UUID : ".$device->getUUID());
             }
             elseif ($device->getType() == Device::TYPE_IOS) {
-                array_push($ios_devices, $device);
-                $logger->debug("iOS device detected. Key : ".$device->getToken());
+                if($device->getAcceptPush()){
+                    array_push($ios_devices, $device);
+                    $logger->debug("iOS device detected. Key : ".$device->getToken());
+                }
             }
             elseif ($device->getType() == Device::TYPE_ANDROID) {
-                array_push($android_devices, $device);
-                $logger->debug("Android device detected. Key : ".$device->getToken());
+                if($device->getAcceptPush()){
+                    array_push($android_devices, $device);
+                    $logger->debug("Android device detected. Key : ".$device->getToken());
+                }
             } else{
                 $logger->warning('Invalid Device type ' . $device->getToken() . ' (type ' . $device->getType() . ') ');
             }

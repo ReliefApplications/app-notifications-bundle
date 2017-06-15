@@ -34,5 +34,10 @@ class ReliefappsNotificationExtension extends Extension
         $container->setParameter('reliefapps_notification.ios.apns_topic', $config['ios']['apns_topic']);
         $container->setParameter('reliefapps_notification.device.class', $config['device']['class']);
         $container->setParameter('reliefapps_notification.model_manager_name', $config['model_manager_name']);
+
+        if( array_key_exists("contexts", $config))
+        {
+            $container->setParameter('reliefapps_notification.contexts', $config["contexts"]);
+        }
     }
 }

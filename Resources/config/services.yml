@@ -1,6 +1,6 @@
 services:
-    reliefapps_notification.push_manager:
-        class: Reliefapps\NotificationBundle\Utils\PushManager
+    reliefapps_notification.context_manager:
+        class: Reliefapps\NotificationBundle\Utils\ContextManager
         arguments:
             - "%reliefapps_notification.ios.push_certificate%"
             - "%reliefapps_notification.ios.push_passphrase%"
@@ -9,6 +9,12 @@ services:
             - "%reliefapps_notification.ios.apns_topic%"
             - "%reliefapps_notification.android.server_key%"
             - "%reliefapps_notification.android.gcm_server%"
+            - "%reliefapps_notification.contexts%"
+
+    reliefapps_notification.push_manager:
+        class: Reliefapps\NotificationBundle\Utils\PushManager
+        arguments:
+            - "@reliefapps_notification.context_manager"
             - "@reliefapps_notification.device.manager.doctrine"
             - "@monolog.logger"
 

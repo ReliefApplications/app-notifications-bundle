@@ -4,6 +4,8 @@ namespace Reliefapps\NotificationBundle\Utils;
 
 use Reliefapps\NotificationBundle\Model\Device;
 use Reliefapps\NotificationBundle\Model\DeviceManager;
+use Reliefapps\NotificationBundle\Model\Context;
+use Reliefapps\NotificationBundle\Utils\ContextManager;
 use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
 use Monolog\Logger;
 
@@ -20,15 +22,9 @@ class PushManager
 
     const IOS_HTTP_TIMEOUT = 1000;
 
-    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol,  $apns_server, $apns_topic, $android_server_key, $gcm_server, DeviceManager $deviceManager, Logger $logger)
+    public function __construct(ContextManager $contextManager, DeviceManager $deviceManager, Logger $logger)
     {
-        $this->iosCertificate = $ios_push_certificate;
-        $this->iosPassphrase  = $ios_push_passphrase;
-        $this->iosProtocol = $ios_protocol;
-        $this->apns_server = $apns_server;
-        $this->apns_topic = $apns_topic;
-        $this->android_server_key = $android_server_key;
-        $this->gcm_server = $gcm_server;
+        $this->contextManager = $contextManager;
         $this->device_manager = $deviceManager;
         $this->logger = $logger;
     }
@@ -39,12 +35,13 @@ class PushManager
      * @param devices Array[ReliefappsNotificationBundle:Device] List of devices to send notifications to
      * @param body NotificationBody Body of the notification
      */
-    public function sendPush($devices, NotificationBody $body)
+    public function sendPush($devices, NotificationBody $body, $contextName = "default")
     {
         $ios_devices = [];
         $android_devices = [];
 
         $logger = $this->logger;
+        $ctx = $this->contextManager->getContext($contextName);
 
         foreach ($devices as $device) {
             if($device->getToken() === null){
@@ -62,11 +59,11 @@ class PushManager
             }
         }
 
-        $this->sendPushAndroid($android_devices, $body);
-        if( $this->iosProtocol == 'legacy'){
-            $this->sendPushIOSLegacy($ios_devices, $body);
+        $this->sendPushAndroid($android_devices, $body, $ctx);
+        if( $ctx->getIosProtocol() == 'legacy'){
+            $this->sendPushIOSLegacy($ios_devices, $body, $ctx);
         }else{
-            $this->sendPushIOSHttp2($ios_devices, $body);
+            $this->sendPushIOSHttp2($ios_devices, $body, $ctx);
         }
 
     }
@@ -77,7 +74,7 @@ class PushManager
      * @param devices : Array of Devices - device that should receive the notification
      * @param body           : title of the notification
      */
-    public function sendPushAndroid(array $devices, NotificationBody $body)
+    public function sendPushAndroid(array $devices, NotificationBody $body, Context $ctx)
     {
         if(empty($devices)){
             return true;
@@ -85,8 +82,8 @@ class PushManager
 
         $logger = $this->logger;
         // ANDROID
-        $url = "https://$this->gcm_server/gcm/send";
-        $apiKey = $this->android_server_key;
+        $url = "https://" . $ctx->getAndroidGcmServer() . "/gcm/send";
+        $apiKey = $ctx->getAndroidServerkey();
 
         $getToken = function(Device $obj) {return $obj->getToken();};
         $deviceTokens = array_map($getToken, $devices);
@@ -140,7 +137,7 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param body         : body of the notification
      */
-    public function sendPushIOSHttp2(array $devices, NotificationBody $body)
+    public function sendPushIOSHttp2(array $devices, NotificationBody $body, Context $ctx)
     {
         $logger = $this->logger;
         //IOS HTTP/2 APNs Protocol
@@ -148,15 +145,15 @@ class PushManager
             $logger->error('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
             return false;
         }
-        $headers = array("apns-topic: $this->apns_topic");
+        $headers = array("apns-topic: " . $ctx->getIosApnsTopic());
 
         $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
         $logger->debug("iOS Payload : $fields_json");
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
-        curl_setopt($ch, CURLOPT_SSLCERT, $this->iosCertificate);
-        curl_setopt($ch, CURLOPT_SSLCERTPASSWD, $this->iosPassphrase);
+        curl_setopt($ch, CURLOPT_SSLCERT, $ctx->getIosPushCertificate());
+        curl_setopt($ch, CURLOPT_SSLCERTPASSWD, $ctx->getIosPushPassphrase());
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_NOBODY, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -167,7 +164,7 @@ class PushManager
 
         foreach($devices as $device){
             $token = $device->getToken();
-            $url = "https://$this->apns_server/3/device/$token";
+            $url = "https://".$ctx->getIosApnsServer()."/3/device/$token";
             curl_setopt( $ch, CURLOPT_URL, $url );
 
             $response = curl_exec($ch);
@@ -223,14 +220,14 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param title           : title of the notification
      */
-    public function sendPushIOSLegacy(array $devices, NotificationBody $body)
+    public function sendPushIOSLegacy(array $devices, NotificationBody $body, Context $ctx)
     {
         $getToken = function(Device $obj) {return $obj->getToken();};
         $deviceTokens = array_map($getToken, $devices);
 
         $logger = $this->logger;
 
-        if (file_exists($this->iosCertificate))  // Si le certificat est présent = environnement de prod
+        if (file_exists($ctx->getIosPushCertificate()))  // Si le certificat est présent = environnement de prod
         {
             $logger->info("iOS certificate detected");
 
@@ -246,14 +243,14 @@ class PushManager
 
             foreach( $chunked_tokens as $token_chain ){
 
-                $ctx = stream_context_create();
-                stream_context_set_option($ctx, 'ssl', 'local_cert', $this->iosCertificate);
-                stream_context_set_option($ctx, 'ssl', 'passphrase', $this->iosPassphrase);
+                $stream_ctx = stream_context_create();
+                stream_context_set_option($stream_ctx, 'ssl', 'local_cert', $ctx->getIosPushCertificate());
+                stream_context_set_option($stream_ctx, 'ssl', 'passphrase', $ctx->getIosPushPassphrase());
 
                 // Open a connection to the APNS server
                 $fp = stream_socket_client(
                     'ssl://gateway.push.apple.com:2195', $err,
-                    $errstr, 60, STREAM_CLIENT_CONNECT|STREAM_CLIENT_PERSISTENT, $ctx);
+                    $errstr, 60, STREAM_CLIENT_CONNECT|STREAM_CLIENT_PERSISTENT, $stream_ctx);
 
                     if( !$fp ){
                         $logger->error('Connection du APNS server failed (code ' . $err . ') : ' . $errstr);

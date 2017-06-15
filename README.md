@@ -202,3 +202,6 @@ Entity : Reliefapps\NotificationBundle\Resources\Model\AndroidAction
 |   callback | Function to call as the button is clicked  | [ ] |   [x]   |
 | foreground | Open the app after click ? (default true)  | [ ] |   [x]   |
 |     inline | Use quick reply field ? (default false)    | [ ] |   [x]   |
+
+
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/c3f7073b-590f-4fe5-a783-bb58161f03ab/big.png)](https://insight.sensiolabs.com/projects/c3f7073b-590f-4fe5-a783-bb58161f03ab)

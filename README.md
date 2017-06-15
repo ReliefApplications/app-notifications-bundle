@@ -173,13 +173,74 @@ class YourController
 }
 ```
 
+
+Advanced Configuration
+======================
+
+Contexts
+--------
+
+The configuration presented above does not allow you to switch servers (to switch between dev and prod) or to change apns_topic and certificates (to manage multiple applications from a single backend).
+
+To solve this issue, we introduced the Object *Context*. A context is a set of configurations that can be used independently.
+
+Contexts are defined in your ```app/config/config.yml```:
+
+```yml
+
+reliefapps_notification:
+    android:
+        server_key: **prod_gcm_key**
+    ios:
+        push_certificate: **prod_ios_certificate**
+        push_passphrase: **prod_passphrase**
+        apns_topic: myapp_prod
+    contexts:
+        ctx_dev:
+            android:
+                server_key: **dev_gcm_key**
+                gcm_server: android.development.googleapis.com
+            ios:
+                push_certificate: **dev_ios_certificate**
+                push_passphrase: **dev_passphrase**
+                apns_server: api.development.push.apple.com
+                apns_topic: myapp_dev
+        ctx_app2:
+            ios:
+                apns_topic: myapp2
+```
+
+All fields that are not filled in the context will be filled with the default configuration.
+
+You can call the context by its name with the *PushManager*.
+
+For more info, lookup Reliefapps\NotificationBundle\Resources\Utils\\*ContextManager* and Reliefapps\NotificationBundle\Resources\Model\\*Context*.
+
+```php
+<?php
+
+// ...
+class YourController
+{
+    // ...
+    public function YourAction()
+    {
+        // ...
+
+        // The third parameter ("default" by default) indicates the context
+        $pushManager->sendPush(Array($device1, $device2), $body, 'ctx_app2');
+    }
+}
+```
+
+
 Documentation
 =============
 
 Payloads
 --------
 
-Entity : Reliefapps\NotificationBundle\Resources\Model\NotificationBody
+Entity : *Reliefapps\NotificationBundle\Resources\Model\NotificationBody*
 
 |    Key   | Description                                | iOS | Android |
 | -------- | ------------------------------------------ | --- | ------- |
@@ -193,7 +254,7 @@ Entity : Reliefapps\NotificationBundle\Resources\Model\NotificationBody
 Android Action
 --------------
 
-Entity : Reliefapps\NotificationBundle\Resources\Model\AndroidAction
+Entity : *Reliefapps\NotificationBundle\Resources\Model\AndroidAction*
 
 |     Key    | Description                                | iOS | Android |
 | ---------- | ------------------------------------------ | --- | ------- |

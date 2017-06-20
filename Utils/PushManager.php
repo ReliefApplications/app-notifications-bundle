@@ -34,8 +34,10 @@ class PushManager
      *
      * @param devices Array[ReliefappsNotificationBundle:Device] List of devices to send notifications to
      * @param body NotificationBody Body of the notification
+     * @param contextName string Name of the context to use to send the notification
+     * @param additionalFields Array Array of associative arrays which contains the fields to add to the notification to send
      */
-    public function sendPush($devices, NotificationBody $body, $contextName = "default")
+    public function sendPush($devices, NotificationBody $body, $contextName = "default", $additionalFields = [])
     {
         $ios_devices = [];
         $android_devices = [];
@@ -63,11 +65,11 @@ class PushManager
             }
         }
 
-        $this->sendPushAndroid($android_devices, $body, $ctx);
-        if( $ctx->getIosProtocol() == 'legacy'){
-            $this->sendPushIOSLegacy($ios_devices, $body, $ctx);
+        $this->sendPushAndroid($android_devices, $body, $ctx, $additionalFields);
+        if($ctx->getIosProtocol() == 'legacy'){
+            $this->sendPushIOSLegacy($ios_devices, $body, $ctx, $additionalFields);
         }else{
-            $this->sendPushIOSHttp2($ios_devices, $body, $ctx);
+            $this->sendPushIOSHttp2($ios_devices, $body, $ctx, $additionalFields);
         }
 
     }
@@ -78,7 +80,7 @@ class PushManager
      * @param devices : Array of Devices - device that should receive the notification
      * @param body           : title of the notification
      */
-    public function sendPushAndroid(array $devices, NotificationBody $body, Context $ctx)
+    public function sendPushAndroid(array $devices, NotificationBody $body, Context $ctx, array $additionalFields)
     {
         if(empty($devices)){
             return true;
@@ -95,7 +97,7 @@ class PushManager
 
         $fields = array(
             'registration_ids'  => $deviceTokens,
-            'data'              => $body->getPayload(NotificationBody::PAYLOAD_ARRAY_ANDROID),
+            'data'              => $body->getPayload(NotificationBody::PAYLOAD_ARRAY_ANDROID, $additionalFields),
             );
         $logger->debug("Android Payload : " . json_encode($fields));
 
@@ -141,8 +143,12 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param body         : body of the notification
      */
-    public function sendPushIOSHttp2(array $devices, NotificationBody $body, Context $ctx)
+    public function sendPushIOSHttp2(array $devices, NotificationBody $body, Context $ctx, array $additionalFields)
     {
+        if(empty($devices)){
+            return true;
+        }
+
         $logger = $this->logger;
         //IOS HTTP/2 APNs Protocol
         if (!(curl_version()["features"] & CURL_VERSION_HTTP2 !== 0)) {
@@ -151,7 +157,7 @@ class PushManager
         }
         $headers = array("apns-topic: " . $ctx->getIosApnsTopic());
 
-        $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
+        $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS, $additionalFields);
         $logger->debug("iOS Payload : $fields_json");
 
         $ch = curl_init();
@@ -224,8 +230,12 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param title           : title of the notification
      */
-    public function sendPushIOSLegacy(array $devices, NotificationBody $body, Context $ctx)
+    public function sendPushIOSLegacy(array $devices, NotificationBody $body, Context $ctx, array $additionalFields)
     {
+        if(empty($devices)){
+            return true;
+        }
+
         $getToken = function(Device $obj) {return $obj->getToken();};
         $deviceTokens = array_map($getToken, $devices);
 
@@ -236,7 +246,7 @@ class PushManager
             $logger->info("iOS certificate detected");
 
             // Encode the payload as JSON
-            $payload = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
+            $payload = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS, $additionalFields);
 
             // Slicing the tokens in arrays of 10 to limit damage in case of error
             if(self::IOS_NOTIFICATION_CHAIN_LENGTH > 0){
@@ -272,6 +282,8 @@ class PushManager
 
                     fclose($fp);
             }
+        }else{
+            $logger->error("No iOS certificate detected.");
         }
     }
 }

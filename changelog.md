@@ -1,5 +1,9 @@
 # CHANGELOG
 
+### v0.1.7 Added Additional Fields
+
+- Fields can be optionally added to the notification payload
+
 ### v0.1.6 Added Contexts
 
 - PushServer Parameters can be changed with contexts

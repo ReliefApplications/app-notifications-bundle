@@ -94,7 +94,7 @@ reliefapps_notification:
 Step 2: Register some devices
 -----------------------------
 
-In a stragic api controler (login, homepage), register the device UUID and token :
+In a strategic api controller (login, homepage), register the device UUID and token :
 ```php
 
 <?php
@@ -229,6 +229,32 @@ class YourController
 
         // The third parameter ("default" by default) indicates the context
         $pushManager->sendPush(Array($device1, $device2), $body, 'ctx_app2');
+    }
+}
+```
+
+Additional fields
+--------
+You may want to add some data to the notification wanted to be sent. This can be fulfilled by the 4th parameters passed to the sendPush function. If not provided, no additional field will be added to the notification payload.
+
+```php
+<?php
+
+// ...
+class YourController
+{
+    // ...
+    public function YourAction()
+    {
+        // ...
+
+        $additionalFields = array(
+            array("key" => "id_user", "value" => 42),
+            array("key" => "linkToFollow", "value" => "https://packagist.org/packages/reliefapps/notification-bundle")
+        );
+
+        // The fourth parameter ([] by default) indicates the fields to add
+        $pushManager->sendPush(Array($device1, $device2), $body, 'default', $additionalFields);
     }
 }
 ```

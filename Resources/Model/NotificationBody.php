@@ -58,17 +58,18 @@ class NotificationBody
      *  Get Payload for a given device
      *
      *  @param Integer Payload Type (see constants)
+     *  @param Array(Associative arrays) Additional fields
      *
      *  @return String Json payload
      */
-    public function getPayload($payload_type)
+    public function getPayload($payload_type, $additionalFields)
     {
         switch ($payload_type) {
             case self::PAYLOAD_JSON_IOS:
-                return $this->getiOSPayload();
+                return $this->getiOSPayload($additionalFields);
                 break;
             case self::PAYLOAD_ARRAY_ANDROID:
-                return $this->getAndroidPayload();
+                return $this->getAndroidPayload($additionalFields);
                 break;
 
             default:
@@ -77,7 +78,7 @@ class NotificationBody
         }
     }
 
-    private function getiOSPayload()
+    private function getiOSPayload($additionalFields)
     {
         $payload = array(
                 "aps" => array(
@@ -94,10 +95,16 @@ class NotificationBody
             $payload["aps"]["category"] = $this->getCategory();
         }
 
+        foreach($additionalFields as $additionalField){
+            if(array_key_exists("key", $additionalField) && array_key_exists("value", $additionalField)){
+                $payload["aps"][$additionalField["key"]] = $additionalField["value"];
+            }
+        }
+
         return json_encode($payload);
     }
 
-    private function getAndroidPayload()
+    private function getAndroidPayload($additionalFields)
     {
         $payload = array();
         if($this->getTitle()){
@@ -111,6 +118,12 @@ class NotificationBody
         }
         if($this->getLedColor()){
             $payload["ledColor"] = $this->getLedColor();
+        }
+
+        foreach($additionalFields as $additionalField){
+            if(array_key_exists("key", $additionalField) && array_key_exists("value", $additionalField)){
+                $payload[$additionalField["key"]] = $additionalField["value"];
+            }
         }
 
         return $payload;

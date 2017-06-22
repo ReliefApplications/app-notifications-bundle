@@ -35,9 +35,8 @@ class PushManager
      * @param devices Array[ReliefappsNotificationBundle:Device] List of devices to send notifications to
      * @param body NotificationBody Body of the notification
      * @param contextName string Name of the context to use to send the notification
-     * @param additionalFields Array Array of associative arrays which contains the fields to add to the notification to send
      */
-    public function sendPush($devices, NotificationBody $body, $contextName = "default", $additionalFields = [])
+    public function sendPush($devices, NotificationBody $body, $contextName = "default")
     {
         $ios_devices = [];
         $android_devices = [];
@@ -65,11 +64,11 @@ class PushManager
             }
         }
 
-        $this->sendPushAndroid($android_devices, $body, $ctx, $additionalFields);
+        $this->sendPushAndroid($android_devices, $body, $ctx);
         if($ctx->getIosProtocol() == 'legacy'){
-            $this->sendPushIOSLegacy($ios_devices, $body, $ctx, $additionalFields);
+            $this->sendPushIOSLegacy($ios_devices, $body, $ctx);
         }else{
-            $this->sendPushIOSHttp2($ios_devices, $body, $ctx, $additionalFields);
+            $this->sendPushIOSHttp2($ios_devices, $body, $ctx);
         }
 
     }
@@ -80,7 +79,7 @@ class PushManager
      * @param devices : Array of Devices - device that should receive the notification
      * @param body           : title of the notification
      */
-    public function sendPushAndroid(array $devices, NotificationBody $body, Context $ctx, array $additionalFields)
+    public function sendPushAndroid(array $devices, NotificationBody $body, Context $ctx)
     {
         if(empty($devices)){
             return true;
@@ -97,7 +96,7 @@ class PushManager
 
         $fields = array(
             'registration_ids'  => $deviceTokens,
-            'data'              => $body->getPayload(NotificationBody::PAYLOAD_ARRAY_ANDROID, $additionalFields),
+            'data'              => $body->getPayload(NotificationBody::PAYLOAD_ARRAY_ANDROID),
             );
         $logger->debug("Android Payload : " . json_encode($fields));
 
@@ -143,13 +142,14 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param body         : body of the notification
      */
-    public function sendPushIOSHttp2(array $devices, NotificationBody $body, Context $ctx, array $additionalFields)
+    public function sendPushIOSHttp2(array $devices, NotificationBody $body, Context $ctx)
     {
         if(empty($devices)){
             return true;
         }
 
         $logger = $this->logger;
+
         //IOS HTTP/2 APNs Protocol
         if (!(curl_version()["features"] & CURL_VERSION_HTTP2 !== 0)) {
             $logger->error('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
@@ -157,7 +157,7 @@ class PushManager
         }
         $headers = array("apns-topic: " . $ctx->getIosApnsTopic());
 
-        $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS, $additionalFields);
+        $fields_json = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS);
         $logger->debug("iOS Payload : $fields_json");
 
         $ch = curl_init();
@@ -230,7 +230,7 @@ class PushManager
      * @param deviceTokens : Array of ids - device token that should receive the notification
      * @param title           : title of the notification
      */
-    public function sendPushIOSLegacy(array $devices, NotificationBody $body, Context $ctx, array $additionalFields)
+    public function sendPushIOSLegacy(array $devices, NotificationBody $body, Context $ctx)
     {
         if(empty($devices)){
             return true;

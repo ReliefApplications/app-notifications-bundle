@@ -1,5 +1,12 @@
 # CHANGELOG
 
+### v0.1.8 Add image-type, image and notId fields for Android
+
+- New fields can be added to the notification for Android :
+  - image-type : "circle"
+  - image : path to the icon used in the app
+  - notId : unique id of the notification (useful to distinguish them)
+
 ### v0.1.7 Added Additional Fields
 
 - Fields can be optionally added to the notification payload

@@ -235,7 +235,7 @@ class YourController
 
 Additional fields
 --------
-You may want to add some data to the notification wanted to be sent. This can be fulfilled by the 4th parameters passed to the sendPush function. If not provided, no additional field will be added to the notification payload.
+You may want to add some data to the notification wanted to be sent.
 
 ```php
 <?php
@@ -253,8 +253,10 @@ class YourController
             array("key" => "linkToFollow", "value" => "https://packagist.org/packages/reliefapps/notification-bundle")
         );
 
-        // The fourth parameter ([] by default) indicates the fields to add
-        $pushManager->sendPush(Array($device1, $device2), $body, 'default', $additionalFields);
+        $body->setAdditionalFields($additionalFields);
+        $body->addAdditionalField(array("key" => "isNew", "value" => true));
+
+        $pushManager->sendPush(Array($device1, $device2), $body);
     }
 }
 ```
@@ -268,14 +270,17 @@ Payloads
 
 Entity : *Reliefapps\NotificationBundle\Resources\Model\NotificationBody*
 
-|    Key   | Description                                | iOS | Android |
-| -------- | ------------------------------------------ | --- | ------- |
-|    title | Title                                      | [x] |   [x]   |
-|     body | Main text                                  | [x] |   [x]   |
-| ledColor | Led color on front of the phone            | [ ] |   [x]   |
-|  actions | List of action                             | [ ] |   [x]   |
-|    badge | Badge number on app icon                   | [x] |   [ ]   |
-| category | iOS category tag (defined in your app)     | [x] |   [ ]   |
+|    Key    | Description                                | iOS | Android |
+| --------- | ------------------------------------------ | --- | ------- |
+|   title   | Title                                      | [x] |   [x]   |
+|   body    | Main text                                  | [x] |   [x]   |
+| ledColor  | Led color on front of the phone            | [ ] |   [x]   |
+|   image   | Path to the icon to use in the app         | [ ] |   [x]   |
+| imageType | Shape of the notification icon             | [ ] |   [x]   |
+|   notId   | Id of the notification to distinguish them | [ ] |   [x]   |
+|  actions  | List of action                             | [ ] |   [x]   |
+|   badge   | Badge number on app icon                   | [x] |   [ ]   |
+| category  | iOS category tag (defined in your app)     | [x] |   [ ]   |
 
 Android Action
 --------------

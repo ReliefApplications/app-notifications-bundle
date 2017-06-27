@@ -1,3 +1,8 @@
+
+[![Latest Stable Version](https://poser.pugx.org/reliefapps/notification-bundle/version)](https://packagist.org/packages/reliefapps/notification-bundle)
+[![Total Downloads](https://poser.pugx.org/reliefapps/notification-bundle/downloads)](https://packagist.org/packages/reliefapps/notification-bundle)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/c3f7073b-590f-4fe5-a783-bb58161f03ab/mini.png)](https://insight.sensiolabs.com/projects/c3f7073b-590f-4fe5-a783-bb58161f03ab)
+
 Installation
 ============
 

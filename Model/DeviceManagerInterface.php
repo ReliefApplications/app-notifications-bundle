@@ -84,5 +84,4 @@ interface DeviceManagerInterface
      *  @param Boolean $andFlush
      */
     public function updateDevice($device, $andFlush = true);
-
 }

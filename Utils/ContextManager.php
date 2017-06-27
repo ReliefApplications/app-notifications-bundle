@@ -4,7 +4,6 @@ namespace Reliefapps\NotificationBundle\Utils;
 
 use Reliefapps\NotificationBundle\Model\Context;
 
-
 /**
  *  Give access to contexts created from the Bundle's configuration
  */
@@ -20,7 +19,7 @@ class ContextManager
      */
     private $contexts;
 
-    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol,  $apns_server, $apns_topic, $android_server_key, $gcm_server, $contextsArrays)
+    public function __construct($ios_push_certificate, $ios_push_passphrase, $ios_protocol, $apns_server, $apns_topic, $android_server_key, $gcm_server, $contextsArrays)
     {
         $this->defaultContext = new Context('default', $android_server_key, $gcm_server, $ios_push_certificate, $ios_push_passphrase, $ios_protocol, $apns_server, $apns_topic);
         $this->contexts = array();
@@ -38,10 +37,9 @@ class ContextManager
      */
     public function getContext($name)
     {
-        if( array_key_exists($name, $this->contexts) )
-        {
+        if (array_key_exists($name, $this->contexts)) {
             return $this->contexts[$name];
-        }else{
+        } else {
             return $this->getDefaultContext();
         }
     }

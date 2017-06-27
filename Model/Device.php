@@ -52,7 +52,8 @@ abstract class Device
     protected $creationDate;
 
 
-    public function __construct($uuid, $type){
+    public function __construct($uuid, $type)
+    {
         $this->uuid = $uuid;
         $this->type = $type;
         $this->setAcceptPush(true);

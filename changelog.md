@@ -1,5 +1,12 @@
 # CHANGELOG
 
+
+### v0.1.9 Removed tokens
+
+- New database behavior
+    - Devices with Unregistered tokens (application removed) are removed from database
+    - Invalid tokens are removed from database (for APNs HTTP2 and GCM) 
+
 ### v0.1.8 Add image-type, image and notId fields for Android
 
 - New fields can be added to the notification for Android :

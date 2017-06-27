@@ -1,7 +1,5 @@
 <?php
-
 namespace Reliefapps\NotificationBundle\Model;
-
 
 /**
  *  Context

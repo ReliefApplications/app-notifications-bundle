@@ -10,45 +10,45 @@
 */
 class Notification
 {
-  const NONE = -1;
+    const NONE = -1;
 
-  const EVERYONE = 0;
+    const EVERYONE = 0;
 
-  /**
-   * @ORM\Column(type="integer")
-   * @ORM\Id
-   * @ORM\GeneratedValue(strategy="AUTO")
-  **/
-  private $id;
+    /**
+    * @ORM\Column(type="integer")
+    * @ORM\Id
+    * @ORM\GeneratedValue(strategy="AUTO")
+    **/
+    private $id;
 
-  /**
-   * @ORM\Column(type="text", nullable=true)
-   */
-  private $content;
+    /**
+    * @ORM\Column(type="text", nullable=true)
+    */
+    private $content;
 
-  /**
-   * @ORM\Column(type="smallint", nullable=true)
-   */
-  private $type;
+    /**
+    * @ORM\Column(type="smallint", nullable=true)
+    */
+    private $type;
 
-  /**
-   * @ORM\Column(type="boolean", nullable=true)
-   */
-  private $sent;
+    /**
+    * @ORM\Column(type="boolean", nullable=true)
+    */
+    private $sent;
 
-  /**
-   * @ORM\Column(type="datetime", nullable=true)
-   */
-  private $creationDate;
+    /**
+    * @ORM\Column(type="datetime", nullable=true)
+    */
+    private $creationDate;
 
 
-  public function __construct()
-  {
-    $this->setContent("");
-    $this->setSent(false);
-    $this->setType(Notification::NONE);
-    $this->setCreationDate(new \DateTime());
-  }
+    public function __construct()
+    {
+        $this->setContent("");
+        $this->setSent(false);
+        $this->setType(Notification::NONE);
+        $this->setCreationDate(new \DateTime());
+    }
 
 // ==================================================================================
 // Automatic generate functions

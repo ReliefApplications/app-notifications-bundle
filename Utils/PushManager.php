@@ -9,7 +9,6 @@ use Reliefapps\NotificationBundle\Utils\ContextManager;
 use Reliefapps\NotificationBundle\Resources\Model\NotificationBody;
 use Monolog\Logger;
 
-
 /**
  *  Implements all the protocols to send notifications.
  *  Supported protocols: APNs Legacy (Apple) for iOS, APNs HTTP2 (Apple) for iOS and GCM (Google) for Android
@@ -45,32 +44,29 @@ class PushManager
         $ctx = $this->contextManager->getContext($contextName);
 
         foreach ($devices as $device) {
-            if($device->getToken() === null){
+            if ($device->getToken() === null) {
                 $logger->debug("Tokenless device ignored. UUID : ".$device->getUUID());
-            }
-            elseif ($device->getType() == Device::TYPE_IOS) {
-                if($device->getAcceptPush()){
+            } elseif ($device->getType() == Device::TYPE_IOS) {
+                if ($device->getAcceptPush()) {
                     array_push($ios_devices, $device);
                     $logger->debug("iOS device detected. Key : ".$device->getToken());
                 }
-            }
-            elseif ($device->getType() == Device::TYPE_ANDROID) {
-                if($device->getAcceptPush()){
+            } elseif ($device->getType() == Device::TYPE_ANDROID) {
+                if ($device->getAcceptPush()) {
                     array_push($android_devices, $device);
                     $logger->debug("Android device detected. Key : ".$device->getToken());
                 }
-            } else{
+            } else {
                 $logger->warning('Invalid Device type ' . $device->getToken() . ' (type ' . $device->getType() . ') ');
             }
         }
 
         $this->sendPushAndroid($android_devices, $body, $ctx);
-        if($ctx->getIosProtocol() == 'legacy'){
+        if ($ctx->getIosProtocol() == 'legacy') {
             $this->sendPushIOSLegacy($ios_devices, $body, $ctx);
-        }else{
+        } else {
             $this->sendPushIOSHttp2($ios_devices, $body, $ctx);
         }
-
     }
 
     /**
@@ -81,7 +77,7 @@ class PushManager
      */
     public function sendPushAndroid(array $devices, NotificationBody $body, Context $ctx)
     {
-        if(empty($devices)){
+        if (empty($devices)) {
             return true;
         }
 
@@ -90,7 +86,9 @@ class PushManager
         $url = "https://" . $ctx->getAndroidGcmServer() . "/gcm/send";
         $apiKey = $ctx->getAndroidServerkey();
 
-        $getToken = function(Device $obj) {return $obj->getToken();};
+        $getToken = function (Device $obj) {
+            return $obj->getToken();
+        };
         $deviceTokens = array_map($getToken, $devices);
 
 
@@ -107,23 +105,38 @@ class PushManager
 
         $ch = curl_init();
 
-        if(!$ch){
+        if (!$ch) {
             $logger->error('Could not connect to GCM server.');
             return false;
         }
 
-        curl_setopt( $ch, CURLOPT_URL, $url );
-        curl_setopt( $ch, CURLOPT_POST, true );
-        curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-        curl_setopt( $ch, CURLOPT_POSTFIELDS, json_encode( $fields ) );
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
 
         $response = curl_exec($ch);
+        $response_array = json_decode($response, true);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         switch ($httpcode) {
             case 200:
                 $logger->debug('GCM server returned : ' . $response);
+
+                foreach ($response_array['results'] as $key => $result) {
+                    // The user removed the app
+                    if (array_key_exists('error', $result) && $result['error'] == 'NotRegistered') {
+                        $this->device_manager->removeDevice($devices[$key]);
+                        $logger->debug('Device ' . $deviceTokens[$key] . ' is no longer active, device removed from database.');
+                    }
+                    // The user removed the app
+                    if (array_key_exists('error', $result) && $result['error'] == 'InvalidRegistration') {
+                        $devices[$key]->setToken(null);
+                        $this->device_manager->updateDevice($devices[$key]);
+                        $logger->warning('Bad device Token for ' . $deviceTokens[$key] . ', token removed from database.');
+                    }
+                }
                 break;
             case 0:
                 $logger->error('Unable to connect to the GCM server : ' . curl_error($ch));
@@ -144,7 +157,7 @@ class PushManager
      */
     public function sendPushIOSHttp2(array $devices, NotificationBody $body, Context $ctx)
     {
-        if(empty($devices)){
+        if (empty($devices)) {
             return true;
         }
 
@@ -172,10 +185,10 @@ class PushManager
         curl_setopt($ch, CURLOPT_POST, count($fields_json));
         curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_json);
 
-        foreach($devices as $device){
+        foreach ($devices as $device) {
             $token = $device->getToken();
             $url = "https://".$ctx->getIosApnsServer()."/3/device/$token";
-            curl_setopt( $ch, CURLOPT_URL, $url );
+            curl_setopt($ch, CURLOPT_URL, $url);
 
             $response = curl_exec($ch);
             // Then, after your curl_exec call:
@@ -189,21 +202,20 @@ class PushManager
                     break;
                 case 0:
                     $logger->error('Unable to connect to the APNs server : ' . $response . curl_error($ch));
-                    if( preg_match('/HTTP\/2/', $response) ){
+                    if (preg_match('/HTTP\/2/', $response)) {
                         $logger->warning('HTTP2 does not seem to be supported by CURL on your server. Please upgrade your setup (with nghttp2) or use the APNs\' "legacy" protocol.');
                     }
                     break;
                 case 410: // 410 The device token is no longer active for the topic.
                     $response_array = json_decode($body, true);
                     $logger->debug('APNs server returned  : (' . $httpcode . ') ' . $response_array["reason"]);
-                    $device->setToken(null);
-                    $this->device_manager->updateDevice($device);
-                    $logger->debug('Device token is no longer active, token removed from database.');
+                    $this->device_manager->removeDevice($device);
+                    $logger->debug('Device is no longer active, device removed from database.');
                     break;
                 case 400: // 400 Bad request
                     $response_array = json_decode($body, true);
                     $logger->debug('APNs server returned  : (' . $httpcode . ') ' . $response_array["reason"]);
-                    if( $response_array["reason"] == 'BadDeviceToken'){
+                    if ($response_array["reason"] == 'BadDeviceToken') {
                         $device->setToken(null);
                         $this->device_manager->updateDevice($device);
                         $logger->warning('Bad device Token, token removed from database.');
@@ -232,59 +244,63 @@ class PushManager
      */
     public function sendPushIOSLegacy(array $devices, NotificationBody $body, Context $ctx)
     {
-        if(empty($devices)){
+        if (empty($devices)) {
             return true;
         }
 
-        $getToken = function(Device $obj) {return $obj->getToken();};
+        $getToken = function (Device $obj) {
+            return $obj->getToken();
+        };
         $deviceTokens = array_map($getToken, $devices);
 
         $logger = $this->logger;
 
-        if (file_exists($ctx->getIosPushCertificate()))  // Si le certificat est présent = environnement de prod
-        {
+        // Check if certificate exists
+        if (file_exists($ctx->getIosPushCertificate())) {
             $logger->info("iOS certificate detected");
 
             // Encode the payload as JSON
             $payload = $body->getPayload(NotificationBody::PAYLOAD_JSON_IOS, $additionalFields);
 
             // Slicing the tokens in arrays of 10 to limit damage in case of error
-            if(self::IOS_NOTIFICATION_CHAIN_LENGTH > 0){
+            if (self::IOS_NOTIFICATION_CHAIN_LENGTH > 0) {
                 $chunked_tokens = array_chunk($deviceTokens, self::IOS_NOTIFICATION_CHAIN_LENGTH);
-            }else{
+            } else {
                 $chunked_tokens = array($deviceTokens);
             }
 
-            foreach( $chunked_tokens as $token_chain ){
-
+            foreach ($chunked_tokens as $token_chain) {
                 $stream_ctx = stream_context_create();
                 stream_context_set_option($stream_ctx, 'ssl', 'local_cert', $ctx->getIosPushCertificate());
                 stream_context_set_option($stream_ctx, 'ssl', 'passphrase', $ctx->getIosPushPassphrase());
 
                 // Open a connection to the APNS server
                 $fp = stream_socket_client(
-                    'ssl://gateway.push.apple.com:2195', $err,
-                    $errstr, 60, STREAM_CLIENT_CONNECT|STREAM_CLIENT_PERSISTENT, $stream_ctx);
+                    'ssl://gateway.push.apple.com:2195',
+                    $err,
+                    $errstr,
+                    60,
+                    STREAM_CLIENT_CONNECT|STREAM_CLIENT_PERSISTENT,
+                    $stream_ctx
+                );
 
-                    if( !$fp ){
-                        $logger->error('Connection du APNS server failed (code ' . $err . ') : ' . $errstr);
-                    }
+                if (!$fp) {
+                    $logger->error('Connection du APNS server failed (code ' . $err . ') : ' . $errstr);
+                }
 
-                    foreach($token_chain as $id)
-                    {
-                        // Build the binary notification
-                        $msg = chr(0) . pack('n', 32) . pack('H*', $id) . pack('n', strlen($payload)) . $payload;
+                foreach ($token_chain as $id) {
+                    // Build the binary notification
+                    $msg = chr(0) . pack('n', 32) . pack('H*', $id) . pack('n', strlen($payload)) . $payload;
 
-                        // Send it to the server
-                        fwrite($fp, $msg, strlen($msg));
-                    }
-                    $logger->debug('iOS notification chain sent.');
+                    // Send it to the server
+                    fwrite($fp, $msg, strlen($msg));
+                }
+                $logger->debug('iOS notification chain sent.');
 
-                    fclose($fp);
+                fclose($fp);
             }
-        }else{
+        } else {
             $logger->error("No iOS certificate detected.");
         }
     }
 }
-

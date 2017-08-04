@@ -13,7 +13,7 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```bash
-$ composer require reliefapps-notification "0.1.4"
+$ composer require reliefapps/notification-bundle "0.1.4"
 ```
 
 *NB: Before version 1, backward compatibility may be broken. It is advised to force a single version of the bundle has shown here*
